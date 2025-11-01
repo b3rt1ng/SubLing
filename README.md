@@ -36,6 +36,8 @@ A lightweight asynchronous subdomain fuzzing tool, written in Python for subdoma
     ```bash
     pip install -r requirements.txt
     ```
+    > [!WARNING]  
+    > By default the wordlist used is the seclists one. make sur to have it installed.
 
 3.  **Install system-wide: (optional)**
     ```bash

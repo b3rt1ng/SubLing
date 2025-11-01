@@ -186,13 +186,9 @@ Special thanks to the cybersecurity community for wordlists and inspiration.
 
 ## 🗺️ Roadmap
 
-- [ ] Support for custom DNS servers
-- [ ] Integration with common subdomain APIs (crt.sh, SecurityTrails, etc.)
 - [ ] Recursive subdomain enumeration
 - [ ] Zone transfer detection
 - [ ] Wildcard detection and filtering
-- [ ] Progress bar and ETA display
-- [ ] JSON output format
 - [ ] Subdomain takeover detection
 
 ---

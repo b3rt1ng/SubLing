@@ -23,7 +23,7 @@ def get_current_version(project_root):
 
 
 def get_latest_version():
-    version_url = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/main/version.txt"
+    version_url = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/refs/heads/main/version.txt"
     try:
         req = Request(version_url)
         req.add_header('User-Agent', 'SubLing-Updater')

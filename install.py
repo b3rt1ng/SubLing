@@ -1,5 +1,3 @@
-"""Installation script for SubLing - system-wide installation."""
-
 import os
 import sys
 import stat
@@ -11,7 +9,6 @@ SHEBANG = "#!/usr/bin/env python3"
 
 
 def add_shebang():
-    """Add shebang to main.py if not present."""
     print(f"[*] Checking for shebang in {SCRIPT_NAME}...")
     try:
         with open(SCRIPT_NAME, 'r+') as f:
@@ -28,7 +25,6 @@ def add_shebang():
 
 
 def make_executable():
-    """Make main.py executable."""
     print(f"[*] Making {SCRIPT_NAME} executable...")
     try:
         st = os.stat(SCRIPT_NAME)
@@ -40,7 +36,6 @@ def make_executable():
 
 
 def setup_symlink():
-    """Create symbolic link in ~/.local/bin."""
     source_path = Path.cwd() / SCRIPT_NAME
     target_dir = Path.home() / ".local" / "bin"
     link_path = target_dir / COMMAND_NAME
@@ -58,7 +53,6 @@ def setup_symlink():
 
 
 def update_shell_config(install_dir):
-    """Add installation directory to PATH in shell config."""
     print("[*] Checking shell configuration...")
     
     shell = os.getenv("SHELL", "")
@@ -89,7 +83,6 @@ def update_shell_config(install_dir):
 
 
 def main():
-    """Main installation routine."""
     print("🕷️  Starting SubLing installation...")
 
     if os.name != 'posix':

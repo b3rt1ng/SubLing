@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import sys
 import os
@@ -41,7 +42,7 @@ async def main():
     parser.add_argument(
         "-w", "--wordlist",
         type=str,
-        default="/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt",
+        default="/usr/share/seclists/Discovery/DNS/n0kovo_subdomains.txt",
         metavar="FILE",
         help="Path to wordlist (default: SecLists top 5000)"
     )

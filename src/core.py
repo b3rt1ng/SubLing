@@ -1,11 +1,12 @@
 import asyncio
+import time
 from typing import Dict, Optional, Tuple
 import aiohttp
 
 from .resolver import check_dns, check_http
 from .utils import load_wordlist
 from .ui import (
-    print_status_line,
+    print_progress_bar,
     gradient_text,
     whole_line,
     colorize_status,
@@ -36,17 +37,18 @@ class SubdomainFuzzer:
         self.checked_count = 0
         self.total_words = 0
         self.header_printed = False
+        self.start_time = None
 
         self.print_lock = asyncio.Lock()
         self.status_update_interval = max(1, self.workers // 10)
 
     def print_header(self):
         if not self.header_printed:
-            print(gradient_text("------- Found Subdomains ------"))
+            print(gradient_text("\n------- Found Subdomains ------"))
             self.header_printed = True
 
     def print_footer(self):
-        print(gradient_text("-----------------------------------"))
+        print(gradient_text("-----------------------------------\n"))
 
     async def display_found(
         self,
@@ -86,10 +88,13 @@ class SubdomainFuzzer:
             subdomain = f"{word.strip()}.{self.domain}"
             self.checked_count += 1
 
+            # Update progress bar at intervals
             if (self.checked_count % self.status_update_interval) == 0 or self.checked_count == 1:
                 async with self.print_lock:
-                    print_status_line(
-                        f"Checking: {subdomain} [{self.checked_count}/{self.total_words}]"
+                    print_progress_bar(
+                        self.checked_count,
+                        self.total_words,
+                        self.start_time
                     )
 
             try:
@@ -132,6 +137,7 @@ class SubdomainFuzzer:
             return
 
         self.total_words = len(words)
+        self.start_time = time.time()
 
         connector = aiohttp.TCPConnector(limit=self.workers, ssl=False)
         timeout_config = aiohttp.ClientTimeout(total=self.timeout)
@@ -159,6 +165,7 @@ class SubdomainFuzzer:
                 task.cancel()
             await asyncio.gather(*workers, return_exceptions=True)
 
-        print(f"\r{whole_line()}", end="")
+        # Clear progress bar and print footer if results were found
+        print(f"\r{whole_line()}\r", end="")
         if self.header_printed:
             self.print_footer()

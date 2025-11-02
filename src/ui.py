@@ -1,5 +1,6 @@
 import sys
 import shutil
+import time
 
 LIGHT_BLUE = (179, 205, 224)
 BLUE = (0, 91, 150)
@@ -53,6 +54,50 @@ def colorize_status(status):
         return f"[{colored_text(status, SPIDER_RED)}]"
     else:
         return f"[{status}]"
+
+
+def format_time(seconds):
+    if seconds < 60:
+        return f"{int(seconds)}s"
+    elif seconds < 3600:
+        mins = int(seconds / 60)
+        secs = int(seconds % 60)
+        return f"{mins}m {secs}s"
+    else:
+        hours = int(seconds / 3600)
+        mins = int((seconds % 3600) / 60)
+        return f"{hours}h {mins}m"
+
+
+def print_progress_bar(current, total, start_time, bar_length=40):
+    if not sys.stdout.isatty():
+        return
+    
+    ERASE_LINE = "\033[K"
+    
+    percentage = (current / total * 100) if total > 0 else 0
+    filled_length = int(bar_length * current / total) if total > 0 else 0
+    
+    elapsed_time = time.time() - start_time
+    if current > 0:
+        avg_time_per_item = elapsed_time / current
+        remaining_items = total - current
+        eta_seconds = avg_time_per_item * remaining_items
+        eta_str = format_time(eta_seconds)
+    else:
+        eta_str = "calculating..."
+    
+    bar_chars = "█" * filled_length + "░" * (bar_length - filled_length)
+    bar_colored = gradient_text(bar_chars, start_color=LIGHT_BLUE, end_color=DARK_BLUE)
+    
+    progress_text = f"{bar_colored} {percentage:.1f}% ({current}/{total}) | ETA: {eta_str}"
+    
+    terminal_width = shutil.get_terminal_size().columns
+    if len(f"{bar_chars} {percentage:.1f}% ({current}/{total}) | ETA: {eta_str}") > terminal_width:
+        max_len = terminal_width - 4
+        progress_text = progress_text[:max_len] + "..."
+    
+    print(f"\r{ERASE_LINE}{progress_text}", end="", flush=True)
 
 
 def print_status_line(text):

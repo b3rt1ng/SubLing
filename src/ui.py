@@ -9,20 +9,23 @@ SPIDER_WHITE = (226, 226, 226)
 SPIDER_RED = (172, 2, 2)
 GREEN = (46, 204, 113)
 YELLOW = (241, 196, 15)
+GREY = (50, 50, 50)
 
 
 def whole_line():
     return " " * shutil.get_terminal_size().columns
 
 
-def gradient_text(text, start_color=LIGHT_BLUE, end_color=BLUE):
+def gradient_text(text, start_color=LIGHT_BLUE, end_color=BLUE, like=None):
     if not sys.stdout.isatty():
         return text
     
     result = ""
     length = len(text)
+    gradient_length = like if like is not None else length
+    
     for i, char in enumerate(text):
-        ratio = i / max(length - 1, 1)
+        ratio = i / max(gradient_length - 1, 1)
         r = int(start_color[0] + ratio * (end_color[0] - start_color[0]))
         g = int(start_color[1] + ratio * (end_color[1] - start_color[1]))
         b = int(start_color[2] + ratio * (end_color[2] - start_color[2]))
@@ -87,8 +90,9 @@ def print_progress_bar(current, total, start_time, bar_length=40):
     else:
         eta_str = "calculating..."
     
-    bar_chars = "█" * filled_length + "░" * (bar_length - filled_length)
-    bar_colored = gradient_text(bar_chars, start_color=LIGHT_BLUE, end_color=DARK_BLUE)
+    bar_chars = "━" * filled_length + "━" * (bar_length - filled_length)
+    bar_colored = gradient_text("━" * filled_length, start_color=LIGHT_BLUE, end_color=DARK_BLUE, like=bar_length)
+    bar_colored += colored_text("━" * (bar_length - filled_length), foreground_color=GREY)
     
     progress_text = f"{bar_colored} {percentage:.1f}% ({current}/{total}) | ETA: {eta_str}"
     

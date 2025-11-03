@@ -37,8 +37,6 @@ A lightweight asynchronous subdomain fuzzing tool, written in Python for subdoma
     ```bash
     pip install -r requirements.txt
     ```
-    > [!WARNING]
-    >
     > By default the wordlist used is the seclists one. make sur to have it installed.
 
 3.  **Install system-wide: (optional)**
@@ -92,7 +90,7 @@ subling --update
 
 ### All Options
 ```
-usage: subling [-h] [-w FILE] [-c NUM] [-t SEC] [-o FILE] [--dns-only] [--http-only] [--version] [--update] [domain]
+usage: subling [-h] [-w FILE] [-c NUM] [--timeout SEC] [-o FILE] [--dns-only] [--http-only] [-t] [--version] [--update] [domain]
 
 SubLing: An asynchronous subdomain fuzzing tool.
 
@@ -102,51 +100,22 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -w, --wordlist FILE   Path to wordlist (default: SecLists top 5000)
-  -c, --concurrency NUM Number of concurrent workers (default: 100)
-  -t, --timeout SEC     Timeout in seconds for each request (default: 5)
+  -c, --concurrency NUM
+                        Number of concurrent workers (default: 100)
+  --timeout SEC         Timeout in seconds for each request (default: 5)
   -o, --output FILE     Save results to file
   --dns-only            Only perform DNS resolution (skip HTTP checks)
   --http-only           Only check HTTP/HTTPS (skip DNS-only results)
+  -t, --transfer        Enable zone transfer detection (AXFR)
   --version             Display the current version of SubLing
   --update              Check for updates and apply them
 ```
 
 ---
 
-## 📋 Output Format
-
-SubLing provides clean, colored output in the terminal:
-
-```
-------- Found Subdomains ------
-  www.example.com : [https] [200]
-  api.example.com : [https] [200]
-  admin.example.com : [https] [403]
-  mail.example.com : [DNS]
------------------------------------
-```
-
-When saving to file with `-o`, results are formatted as:
-```
-www.example.com [https] [200]
-api.example.com [https] [200]
-admin.example.com [https] [403]
-mail.example.com [DNS]
-```
-
----
-
-## 🔧 Requirements
-
-* Python 3.8+
-* aiohttp
-* No aiodns required! SubLing uses native asyncio for DNS resolution.
-
----
-
 ## 📝 Wordlists
 
-SubLing works with any text-based wordlist (one subdomain per line). Recommended wordlists:
+SubLing works with any text-based wordlist (one subdomain per line). Here are some ressources I like:
 
 * **SecLists**: https://github.com/danielmiessler/SecLists
   * `Discovery/DNS/subdomains-top1million-5000.txt` (default)
@@ -154,41 +123,20 @@ SubLing works with any text-based wordlist (one subdomain per line). Recommended
 * **Assetnote**: https://wordlists.assetnote.io/
 * **jhaddix**: https://gist.github.com/jhaddix/86a06c5dc309d08580a018c66354a056
 
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-* Report bugs
-* Suggest new features
-* Submit pull requests
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
 ## ⚠️ Disclaimer
 
-This tool is intended for authorized security testing and educational purposes only. Always ensure you have permission before scanning any domain or network. The authors are not responsible for any misuse or damage caused by this tool.
+This tool is intended for authorized security testing and educational purposes only. Always ensure you have permission before scanning any domain.
 
----
-
-## 🙏 Credits
-
-Created by [@b3rt1ng](https://github.com/b3rt1ng)
-
-Special thanks to the cybersecurity community for wordlists and inspiration.
 
 ---
 
 ## 🗺️ Roadmap
 
 - [ ] Recursive subdomain enumeration
-- [ ] Zone transfer detection
+- [x] Zone transfer detection
 - [ ] Wildcard detection and filtering
 - [ ] Subdomain takeover detection
 

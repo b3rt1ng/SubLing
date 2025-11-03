@@ -18,6 +18,7 @@ from src.core import SubdomainFuzzer
 from src.ui import display_art, gradient_text, print_report_box
 from src.utils import save_results, validate_domain
 from src.updater import update_command
+from src.zone_transfer import check_zone_transfer_vulnerability
 
 def normalize_target(raw: str) -> str:
     if not raw:
@@ -81,7 +82,7 @@ async def main():
         help="Number of concurrent workers (default: 100)"
     )
     parser.add_argument(
-        "-t", "--timeout",
+        "--timeout",
         type=int,
         default=5,
         metavar="SEC",
@@ -101,6 +102,11 @@ async def main():
         "--http-only",
         action="store_true",
         help="Only check HTTP/HTTPS (skip DNS-only results)"
+    )
+    parser.add_argument(
+        "-t", "--transfer",
+        action="store_true",
+        help="Enable zone transfer detection (AXFR)"
     )
     parser.add_argument(
         "--version",
@@ -151,11 +157,41 @@ async def main():
         "Mode": "DNS Only" if args.dns_only else "HTTP Only" if args.http_only else "Full"
     }
     
+    if args.transfer:
+        config_data["Zone Transfer"] = "Enabled"
+    
     if args.output:
         config_data["Output File"] = args.output
     
     print_report_box("SubLing Configuration", config_data)
-    print(gradient_text("🔍 Starting subdomain fuzzing...\n"))
+    
+    # Étape 1: Tentative de zone transfer (uniquement si --transfer est spécifié)
+    zone_transfer_subdomains = None
+    if args.transfer:
+        zone_transfer_subdomains = await check_zone_transfer_vulnerability(domain, args.timeout)
+    
+    # Si zone transfer réussit, on utilise ces résultats directement
+    if zone_transfer_subdomains:
+        print(gradient_text(f"✨ Found {len(zone_transfer_subdomains)} subdomains via zone transfer!"))
+        
+        # Convertir en format compatible avec found_subdomains
+        found_subdomains = {}
+        for subdomain in sorted(zone_transfer_subdomains):
+            found_subdomains[subdomain] = (None, None)
+        
+        if args.output:
+            print(f"💾 Saving results to {args.output}...")
+            try:
+                save_results(args.output, found_subdomains)
+                print(gradient_text("✅ Results saved successfully!"))
+            except IOError as e:
+                print(gradient_text(f"❌ {e}"))
+        
+        print(gradient_text("\n🎯 Zone transfer provided complete subdomain list. Fuzzing skipped."))
+        return
+    
+    # Étape 2: Si zone transfer échoue, on procède au fuzzing classique
+    print(gradient_text("🔎 Starting subdomain fuzzing...\n"))
     
     fuzzer = SubdomainFuzzer(
         domain=domain,

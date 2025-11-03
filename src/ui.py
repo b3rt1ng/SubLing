@@ -4,7 +4,7 @@ import time
 
 LIGHT_BLUE = (179, 205, 224)
 BLUE = (0, 91, 150)
-DARK_BLUE = (1, 31, 75)
+DARK_BLUE = (1, 59, 143)
 SPIDER_WHITE = (226, 226, 226)
 SPIDER_RED = (172, 2, 2)
 GREEN = (46, 204, 113)

@@ -48,7 +48,7 @@ class SubdomainFuzzer:
             self.header_printed = True
 
     def print_footer(self):
-        print(gradient_text("-----------------------------------\n"))
+        print(gradient_text("-------------------------------\n"))
 
     async def display_found(
         self,

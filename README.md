@@ -7,7 +7,8 @@ A lightweight asynchronous subdomain fuzzing tool, written in Python for subdoma
 ---
 
 ### Demo
-SOON
+
+<img src="https://cdn.imgchest.com/files/eecbdd4a84e1.gif">
 
 ---
 

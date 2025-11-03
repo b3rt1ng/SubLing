@@ -88,7 +88,6 @@ class SubdomainFuzzer:
             subdomain = f"{word.strip()}.{self.domain}"
             self.checked_count += 1
 
-            # Update progress bar at intervals
             if (self.checked_count % self.status_update_interval) == 0 or self.checked_count == 1:
                 async with self.print_lock:
                     print_progress_bar(
@@ -165,7 +164,6 @@ class SubdomainFuzzer:
                 task.cancel()
             await asyncio.gather(*workers, return_exceptions=True)
 
-        # Clear progress bar and print footer if results were found
         print(f"\r{whole_line()}\r", end="")
         if self.header_printed:
             self.print_footer()

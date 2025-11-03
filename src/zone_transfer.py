@@ -7,9 +7,6 @@ from .ui import gradient_text, colored_text, GREEN, SPIDER_RED, YELLOW
 
 
 class ZoneTransferDetector:
-    """
-    Détecte et exploite les vulnérabilités de zone transfer DNS (AXFR)
-    """
     
     def __init__(self, domain: str, timeout: int = 10):
         self.domain = domain
@@ -18,16 +15,12 @@ class ZoneTransferDetector:
         self.vulnerable_ns: List[str] = []
         
     async def get_nameservers(self) -> List[str]:
-        """
-        Récupère la liste des nameservers pour le domaine cible
-        """
         try:
             loop = asyncio.get_event_loop()
             resolver = dns.resolver.Resolver()
             resolver.timeout = self.timeout
             resolver.lifetime = self.timeout
             
-            # Requête NS pour obtenir les nameservers
             answers = await loop.run_in_executor(
                 None,
                 lambda: resolver.resolve(self.domain, 'NS')
@@ -37,7 +30,6 @@ class ZoneTransferDetector:
             for rdata in answers:
                 ns_name = str(rdata.target).rstrip('.')
                 
-                # Résoudre l'adresse IP du nameserver
                 try:
                     ns_answers = await loop.run_in_executor(
                         None,
@@ -46,7 +38,6 @@ class ZoneTransferDetector:
                     for ns_ip in ns_answers:
                         nameservers.append(str(ns_ip.address))
                 except Exception:
-                    # Si résolution IP échoue, on garde le nom
                     nameservers.append(ns_name)
             
             self.nameservers = nameservers
@@ -62,14 +53,9 @@ class ZoneTransferDetector:
             return []
     
     async def attempt_axfr(self, nameserver: str) -> Optional[Set[str]]:
-        """
-        Tente un zone transfer AXFR sur un nameserver spécifique
-        Retourne un set de sous-domaines si succès, None sinon
-        """
         try:
             loop = asyncio.get_event_loop()
             
-            # Tentative de zone transfer
             zone = await loop.run_in_executor(
                 None,
                 lambda: dns.zone.from_xfr(
@@ -77,7 +63,6 @@ class ZoneTransferDetector:
                 )
             )
             
-            # Extraction des sous-domaines
             subdomains = set()
             for name, node in zone.nodes.items():
                 subdomain = str(name)
@@ -91,7 +76,6 @@ class ZoneTransferDetector:
             return subdomains
             
         except dns.exception.FormError:
-            # Le serveur a refusé le zone transfer (comportement normal)
             return None
         except dns.exception.Timeout:
             return None
@@ -101,10 +85,6 @@ class ZoneTransferDetector:
             return None
     
     async def check_all_nameservers(self) -> Optional[Set[str]]:
-        """
-        Teste tous les nameservers pour détecter une vulnérabilité de zone transfer
-        Retourne tous les sous-domaines trouvés ou None
-        """
         if not self.nameservers:
             await self.get_nameservers()
         
@@ -132,9 +112,6 @@ class ZoneTransferDetector:
         return None
     
     def print_vulnerability_report(self, subdomains: Set[str]):
-        """
-        Affiche un rapport détaillé de la vulnérabilité détectée
-        """
         print(gradient_text("\n" + "="*60))
         print(colored_text("⚠️  CRITICAL SECURITY ISSUE DETECTED!", SPIDER_RED))
         print(gradient_text("="*60))
@@ -153,16 +130,6 @@ class ZoneTransferDetector:
 
 
 async def check_zone_transfer_vulnerability(domain: str, timeout: int = 10) -> Optional[Set[str]]:
-    """
-    Fonction helper pour vérifier rapidement si un domaine est vulnérable au zone transfer
-    
-    Args:
-        domain: Le domaine cible
-        timeout: Timeout en secondes pour chaque requête
-        
-    Returns:
-        Set de sous-domaines si vulnérable, None sinon
-    """
     detector = ZoneTransferDetector(domain, timeout)
     subdomains = await detector.check_all_nameservers()
     

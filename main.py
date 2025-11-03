@@ -34,7 +34,7 @@ def normalize_target(raw: str) -> str:
         hostname = parsed.hostname or raw
 
     if not hostname:
-        raise ValueError(f"Impossible d'extraire le host depuis: {raw}")
+        raise ValueError(f"Cannot extract host from: {raw}")
 
     hostname = hostname.rstrip(".")
 
@@ -165,12 +165,10 @@ async def main():
     
     print_report_box("SubLing Configuration", config_data)
     
-    # Étape 1: Tentative de zone transfer (uniquement si --transfer est spécifié)
     zone_transfer_subdomains = None
     if args.transfer:
         zone_transfer_subdomains = await check_zone_transfer_vulnerability(domain, args.timeout)
     
-    # Si zone transfer réussit, on utilise ces résultats directement
     if zone_transfer_subdomains:
         print(gradient_text(f"✨ Found {len(zone_transfer_subdomains)} subdomains via zone transfer!"))
         
@@ -190,7 +188,6 @@ async def main():
         print(gradient_text("\n🎯 Zone transfer provided complete subdomain list. Fuzzing skipped."))
         return
     
-    # Étape 2: Si zone transfer échoue, on procède au fuzzing classique
     print(gradient_text("🔎 Starting subdomain fuzzing...\n"))
     
     fuzzer = SubdomainFuzzer(

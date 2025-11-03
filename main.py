@@ -4,7 +4,10 @@ import sys
 import os
 import asyncio
 import time
+import tldextract
+import re
 from pathlib import Path
+from urllib.parse import urlparse
 
 real_script_path = Path(os.path.realpath(__file__))
 project_root = real_script_path.parent
@@ -16,6 +19,30 @@ from src.ui import display_art, gradient_text, print_report_box
 from src.utils import save_results, validate_domain
 from src.updater import update_command
 
+def normalize_target(raw: str) -> str:
+    if not raw:
+        raise ValueError("empty target")
+
+    raw = raw.strip()
+
+    if re.match(r"^[a-zA-Z][a-zA-Z0-9+\-.]*://", raw) or "/" in raw:
+        parsed = urlparse(raw if "://" in raw else "http://" + raw)
+        hostname = parsed.hostname or raw
+    else:
+        parsed = urlparse("http://" + raw)
+        hostname = parsed.hostname or raw
+
+    if not hostname:
+        raise ValueError(f"Impossible d'extraire le host depuis: {raw}")
+
+    hostname = hostname.rstrip(".")
+
+    ext = tldextract.extract(hostname)
+    if ext.domain and ext.suffix:
+        return f"{ext.domain}.{ext.suffix}"
+
+    candidate = hostname.lstrip("www.")
+    return candidate
 
 def get_current_version():
     version_file = project_root / "version.txt"
@@ -42,7 +69,7 @@ async def main():
     parser.add_argument(
         "-w", "--wordlist",
         type=str,
-        default="/usr/share/seclists/Discovery/DNS/n0kovo_subdomains.txt",
+        default="/usr/share/wordlists/SecLists/Discovery/DNS/subdomains-top1million-5000.txt",
         metavar="FILE",
         help="Path to wordlist (default: SecLists top 5000)"
     )
@@ -100,6 +127,13 @@ async def main():
     if not args.domain:
         parser.error("domain argument is required (Use --help for more info)")
         sys.exit(1)
+
+    raw_input = args.domain
+    try:
+        domain = normalize_target(raw_input)
+    except ValueError as e:
+        print(gradient_text(f"❌ Target invalid: {e}"))
+        sys.exit(1)
     
     if not validate_domain(args.domain):
         print(gradient_text(f"❌ Invalid domain format: {args.domain}"))
@@ -108,7 +142,8 @@ async def main():
     display_art()
     
     config_data = {
-        "Target Domain": args.domain,
+        "Input": raw_input,
+        "Target Domain": domain,
         "Version": current_version,
         "Wordlist": args.wordlist,
         "Workers": args.concurrency,
@@ -123,7 +158,7 @@ async def main():
     print(gradient_text("🔍 Starting subdomain fuzzing...\n"))
     
     fuzzer = SubdomainFuzzer(
-        domain=args.domain,
+        domain=domain,
         wordlist=args.wordlist,
         workers=args.concurrency,
         timeout=args.timeout,

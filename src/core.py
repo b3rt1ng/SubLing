@@ -80,50 +80,55 @@ class SubdomainFuzzer:
         session: aiohttp.ClientSession
     ):
         while True:
-            word = await queue.get()
-            if word is None:
-                queue.task_done()
-                break
-
-            subdomain = f"{word.strip()}.{self.domain}"
-            self.checked_count += 1
-
-            if (self.checked_count % self.status_update_interval) == 0 or self.checked_count == 1:
-                async with self.print_lock:
-                    print_progress_bar(
-                        self.checked_count,
-                        self.total_words,
-                        self.start_time
-                    )
-
             try:
-                if self.http_only:
-                    result = await check_http(session, subdomain, self.timeout)
-                    if result:
-                        proto, status = result
-                        self.found_subdomains[subdomain] = (proto, status)
-                        await self.display_found(subdomain, proto, status)
+                word = await queue.get()
+                if word is None:
                     queue.task_done()
-                    continue
+                    break
 
-                dns_exists = await check_dns(subdomain, self.timeout)
-                if dns_exists:
-                    if self.dns_only:
-                        self.found_subdomains[subdomain] = (None, None)
-                        await self.display_found(subdomain, None, None)
-                    else:
+                subdomain = f"{word.strip()}.{self.domain}"
+                self.checked_count += 1
+
+                if (self.checked_count % self.status_update_interval) == 0 or self.checked_count == 1:
+                    async with self.print_lock:
+                        print_progress_bar(
+                            self.checked_count,
+                            self.total_words,
+                            self.start_time
+                        )
+
+                try:
+                    if self.http_only:
                         result = await check_http(session, subdomain, self.timeout)
                         if result:
                             proto, status = result
                             self.found_subdomains[subdomain] = (proto, status)
                             await self.display_found(subdomain, proto, status)
-                        else:
-                            self.found_subdomains[subdomain] = (None, None)
-                            await self.display_found(subdomain, None, None)
+                    else:
+                        dns_exists = await check_dns(subdomain, self.timeout)
+                        if dns_exists:
+                            if self.dns_only:
+                                self.found_subdomains[subdomain] = (None, None)
+                                await self.display_found(subdomain, None, None)
+                            else:
+                                result = await check_http(session, subdomain, self.timeout)
+                                if result:
+                                    proto, status = result
+                                    self.found_subdomains[subdomain] = (proto, status)
+                                    await self.display_found(subdomain, proto, status)
+                                else:
+                                    self.found_subdomains[subdomain] = (None, None)
+                                    await self.display_found(subdomain, None, None)
+                except Exception:
+                    pass
+                finally:
+                    queue.task_done()
+                    
+            except asyncio.CancelledError:
+                break
             except Exception:
-                pass
-            finally:
                 queue.task_done()
+                break
 
     async def run(self):
         try:
@@ -152,17 +157,23 @@ class SubdomainFuzzer:
                 for _ in range(self.workers)
             ]
 
-            for word in words:
-                await queue.put(word)
+            try:
+                for word in words:
+                    await queue.put(word)
 
-            for _ in range(self.workers):
-                await queue.put(None)
+                for _ in range(self.workers):
+                    await queue.put(None)
 
-            await queue.join()
-
-            for task in workers:
-                task.cancel()
-            await asyncio.gather(*workers, return_exceptions=True)
+                await queue.join()
+                
+            except KeyboardInterrupt:
+                pass
+            finally:
+                for task in workers:
+                    if not task.done():
+                        task.cancel()
+                
+                await asyncio.gather(*workers, return_exceptions=True)
 
         print(f"\r{whole_line()}\r", end="")
         if self.header_printed:

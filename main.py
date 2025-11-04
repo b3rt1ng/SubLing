@@ -188,7 +188,7 @@ async def main():
         print(gradient_text("\n🎯 Zone transfer provided complete subdomain list. Fuzzing skipped."))
         return
     
-    print(gradient_text("🔎 Starting subdomain fuzzing...\n"))
+    print(gradient_text("🔎 Starting subdomain fuzzing..."))
     
     fuzzer = SubdomainFuzzer(
         domain=domain,

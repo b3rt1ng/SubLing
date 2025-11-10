@@ -3,7 +3,7 @@ import dns.query
 import dns.zone
 from typing import List, Optional, Set
 import asyncio
-from .ui import gradient_text, colored_text, GREEN, SPIDER_RED, YELLOW
+from .ui import gradient_text, colored_text, print_report_box, GREEN, SPIDER_RED, YELLOW
 
 
 class ZoneTransferDetector:
@@ -33,7 +33,7 @@ class ZoneTransferDetector:
                 try:
                     ns_answers = await loop.run_in_executor(
                         None,
-                        lambda: resolver.resolve(ns_name, 'A')
+                        lambda name=ns_name: resolver.resolve(name, 'A')
                     )
                     for ns_ip in ns_answers:
                         nameservers.append(str(ns_ip.address))
@@ -44,12 +44,16 @@ class ZoneTransferDetector:
             return nameservers
             
         except dns.resolver.NXDOMAIN:
+            print(colored_text("   ❌ Domain does not exist (NXDOMAIN)", SPIDER_RED))
             return []
         except dns.resolver.NoAnswer:
+            print(colored_text("   ❌ No NS records found", YELLOW))
             return []
         except dns.resolver.NoNameservers:
+            print(colored_text("   ❌ No nameservers available", SPIDER_RED))
             return []
-        except Exception:
+        except Exception as e:
+            print(colored_text(f"   ❌ Error resolving nameservers: {e}", SPIDER_RED))
             return []
     
     async def attempt_axfr(self, nameserver: str) -> Optional[Set[str]]:
@@ -69,19 +73,12 @@ class ZoneTransferDetector:
                 if subdomain == '@':
                     subdomains.add(self.domain)
                 elif subdomain:
-                    full_domain = f"{subdomain}.{self.domain}"
+                    full_domain = f"{subdomain}.{self.domain}".rstrip('.')
                     subdomains.add(full_domain)
             
             self.vulnerable_ns.append(nameserver)
             return subdomains
-            
-        except dns.exception.FormError:
-            return None
-        except dns.exception.Timeout:
-            return None
-        except ConnectionRefusedError:
-            return None
-        except Exception:
+        except:
             return None
     
     async def check_all_nameservers(self) -> Optional[Set[str]]:
@@ -89,6 +86,7 @@ class ZoneTransferDetector:
             await self.get_nameservers()
         
         if not self.nameservers:
+            print(colored_text("\n❌ No nameservers found for zone transfer test", SPIDER_RED))
             return None
         
         print(gradient_text(f"\n🔍 Testing zone transfer on {len(self.nameservers)} nameserver(s)..."))
@@ -112,21 +110,26 @@ class ZoneTransferDetector:
         return None
     
     def print_vulnerability_report(self, subdomains: Set[str]):
-        print(gradient_text("\n" + "="*60))
-        print(colored_text("⚠️  CRITICAL SECURITY ISSUE DETECTED!", SPIDER_RED))
-        print(gradient_text("="*60))
+        vulnerability_data = {
+            "Status": colored_text("⚠️  CRITICAL VULNERABILITY", SPIDER_RED),
+            "Domain": colored_text(self.domain, YELLOW),
+            "Vulnerable NS": colored_text(', '.join(self.vulnerable_ns), SPIDER_RED),
+            "Exposed Records": colored_text(str(len(subdomains)), SPIDER_RED),
+            "Risk Level": colored_text("HIGH", SPIDER_RED)
+        }
         
-        print(colored_text("\n🚨 Zone Transfer Vulnerability Found!", YELLOW))
-        print(f"\n   Domain: {colored_text(self.domain, YELLOW)}")
-        print(f"   Vulnerable NS: {colored_text(', '.join(self.vulnerable_ns), SPIDER_RED)}")
-        print(f"   Exposed records: {colored_text(len(subdomains), SPIDER_RED)}")
+        print_report_box("🚨 Zone Transfer Vulnerability Detected", vulnerability_data)
         
-        print(gradient_text("\n📋 Recommendation:"))
-        print("   Configure your DNS servers to restrict zone transfers")
-        print("   Only allow transfers from authorized secondary nameservers")
+        recommendations_data = {
+            "Action 1": "Configure DNS servers to restrict zone transfers",
+            "Action 2": "Only allow transfers from authorized secondary nameservers",
+            "Action 3": "Use TSIG (Transaction Signature) for authentication",
+            "Action 4": "Regularly audit DNS security configurations"
+        }
         
-        print(gradient_text("\n✅ All subdomains retrieved via zone transfer!"))
-        print(gradient_text("="*60 + "\n"))
+        print_report_box("📋 Security Recommendations", recommendations_data)
+        
+        print(gradient_text("\n✅ All subdomains retrieved via zone transfer!\n"))
 
 
 async def check_zone_transfer_vulnerability(domain: str, timeout: int = 10) -> Optional[Set[str]]:

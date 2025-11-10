@@ -138,7 +138,7 @@ This tool is intended for authorized security testing and educational purposes o
 - [ ] Recursive subdomain enumeration
 - [x] Zone transfer detection
 - [ ] Wildcard detection and filtering
-- [ ] Subdomain takeover detection
+- [x] Subdomain takeover detection (W.I.P)
 
 ---
 

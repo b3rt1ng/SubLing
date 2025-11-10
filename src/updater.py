@@ -87,7 +87,7 @@ def extract_and_update(zip_path, project_root):
             else:
                 source_dir = Path(extract_dir)
             
-            items_to_update = ['src', 'main.py', 'install.py', 'version.txt', 'README.md']
+            items_to_update = ['src', 'data', 'main.py', 'install.py', 'version.txt', 'README.md']
             
             print("🔄 Applying update...")
             for item_name in items_to_update:

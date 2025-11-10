@@ -1,0 +1,72 @@
+{
+  "GitHub Pages": {
+    "cname": ["github.io"],
+    "response": ["There isn't a GitHub Pages site here", "For root URLs (like http://example.com/)"],
+    "fingerprint": "github.io"
+  },
+  "Heroku": {
+    "cname": ["herokuapp.com", "herokussl.com"],
+    "response": ["No such app", "There's nothing here, yet"],
+    "fingerprint": "herokuapp"
+  },
+  "AWS S3": {
+    "cname": ["s3.amazonaws.com", "s3-website"],
+    "response": ["NoSuchBucket", "The specified bucket does not exist"],
+    "fingerprint": "s3"
+  },
+  "Azure": {
+    "cname": ["azurewebsites.net", "cloudapp.net", "cloudapp.azure.com"],
+    "response": ["404 Web Site not found", "Error 404"],
+    "fingerprint": "azure"
+  },
+  "Tumblr": {
+    "cname": ["tumblr.com"],
+    "response": ["There's nothing here", "Whatever you were looking for doesn't currently exist"],
+    "fingerprint": "tumblr"
+  },
+  "Shopify": {
+    "cname": ["myshopify.com"],
+    "response": ["Only one step left", "Sorry, this shop is currently unavailable"],
+    "fingerprint": "shopify"
+  },
+  "Fastly": {
+    "cname": ["fastly.net"],
+    "response": ["Fastly error: unknown domain"],
+    "fingerprint": "fastly"
+  },
+  "Ghost": {
+    "cname": ["ghost.io"],
+    "response": ["The thing you were looking for is no longer here"],
+    "fingerprint": "ghost"
+  },
+  "Pantheon": {
+    "cname": ["pantheonsite.io"],
+    "response": ["404 error unknown site"],
+    "fingerprint": "pantheon"
+  },
+  "Zendesk": {
+    "cname": ["zendesk.com"],
+    "response": ["Help Center Closed", "this help center no longer exists"],
+    "fingerprint": "zendesk"
+  },
+  "Bitbucket": {
+    "cname": ["bitbucket.io"],
+    "response": ["Repository not found"],
+    "fingerprint": "bitbucket"
+  },
+  "Netlify": {
+    "cname": ["netlify.app", "netlify.com"],
+    "response": ["Not Found - Request ID"],
+    "fingerprint": "netlify"
+  },
+  "Vercel": {
+    "cname": ["vercel.app"],
+    "response": ["The deployment could not be found"],
+    "fingerprint": "vercel"
+  },
+  "AWS CloudFront": {
+    "cname": ["cloudfront.net"],
+    "response": ["Bad request", "ERROR: The request could not be satisfied"],
+    "fingerprint": "cloudfront"
+  }
+}

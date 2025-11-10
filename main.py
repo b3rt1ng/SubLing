@@ -19,6 +19,7 @@ from src.ui import display_art, gradient_text, print_report_box
 from src.utils import save_results, validate_domain
 from src.updater import update_command
 from src.zone_transfer import check_zone_transfer_vulnerability
+from src.takeover import check_subdomain_takeover
 
 def normalize_target(raw: str) -> str:
     if not raw:
@@ -82,7 +83,7 @@ async def main():
         help="Number of concurrent workers (default: 100)"
     )
     parser.add_argument(
-        "-t","--timeout",
+        "-T","--timeout",
         type=int,
         default=5,
         metavar="SEC",
@@ -107,6 +108,11 @@ async def main():
         "-tr", "--transfer",
         action="store_true",
         help="Enable zone transfer detection (AXFR)"
+    )
+    parser.add_argument(
+        "-to", "--takeover",
+        action="store_true",
+        help="Enable subdomain takeover detection"
     )
     parser.add_argument(
         "--version",
@@ -155,7 +161,8 @@ async def main():
         "Workers": args.concurrency,
         "Timeout": f"{args.timeout}s",
         "Mode": "DNS Only" if args.dns_only else "HTTP Only" if args.http_only else "Full",
-        "Zone Transfer": "Enabled" if args.transfer else "Disabled"
+        "Zone Transfer": "Enabled" if args.transfer else "Disabled",
+        "Takeover Detection": "Enabled" if args.takeover else "Disabled"
     }
     
     if args.output:
@@ -173,6 +180,9 @@ async def main():
         found_subdomains = {}
         for subdomain in sorted(zone_transfer_subdomains):
             found_subdomains[subdomain] = (None, None)
+        
+        if args.takeover:
+            await check_subdomain_takeover(found_subdomains, args.timeout, args.concurrency)
         
         if args.output:
             print(f"💾 Saving results to {args.output}...")
@@ -201,6 +211,9 @@ async def main():
     end = time.time()
     
     print(gradient_text(f"\n✨ Fuzzing completed in {end - start:.2f} seconds."))
+    
+    if args.takeover and fuzzer.found_subdomains:
+        await check_subdomain_takeover(fuzzer.found_subdomains, args.timeout, args.concurrency)
     
     if args.output and fuzzer.found_subdomains:
         print(f"💾 Saving results to {args.output}...")

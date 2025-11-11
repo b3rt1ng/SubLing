@@ -21,13 +21,14 @@ def save_results(
     try:
         with open(output_file, 'w') as f:
             for subdomain, (proto, status, ip) in sorted(found_subdomains.items()):
+                base = ""
                 if proto:
-                    f.write(f"{subdomain} [{proto}] [{status}]\n")
+                    base = f"{subdomain} [{proto}] [{status}]"
                 else:
-                    if ip:
-                        f.write(f"{subdomain} [DNS] [{ip}]\n")
-                    else:
-                        f.write(f"{subdomain} [DNS]\n")
+                    base = f"{subdomain} [DNS]"
+                if ip:
+                    base += f" [{ip}]"
+                f.write(f"{base}\n")
     except Exception as e:
         raise IOError(f"Error saving results: {e}")
 

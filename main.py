@@ -20,6 +20,7 @@ from src.utils import save_results, validate_domain
 from src.updater import update_command
 from src.zone_transfer import check_zone_transfer_vulnerability
 from src.takeover import check_subdomain_takeover
+from src.resolver import get_ip_address
 
 def normalize_target(raw: str) -> str:
     if not raw:

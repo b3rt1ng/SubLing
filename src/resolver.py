@@ -4,6 +4,26 @@ from typing import Optional, Tuple
 import aiohttp
 
 
+async def get_ip_address(subdomain: str, timeout: int = 5) -> Optional[str]:
+    try:
+        loop = asyncio.get_event_loop()
+        result = await asyncio.wait_for(
+            loop.run_in_executor(
+                None,
+                socket.getaddrinfo,
+                subdomain,
+                None,
+                socket.AF_INET
+            ),
+            timeout=timeout
+        )
+        if result:
+            return result[0][4][0]
+        return None
+    except (socket.gaierror, asyncio.TimeoutError, Exception):
+        return None
+
+
 async def check_dns(subdomain: str, timeout: int = 5) -> bool:
     try:
         loop = asyncio.get_event_loop()

@@ -179,10 +179,11 @@ async def main():
         
         found_subdomains = {}
         for subdomain in sorted(zone_transfer_subdomains):
-            found_subdomains[subdomain] = (None, None)
+            found_subdomains[subdomain] = (None, None, None)
         
         if args.takeover:
-            await check_subdomain_takeover(found_subdomains, args.timeout, args.concurrency)
+            takeover_subdomains = {k: (v[0], v[1]) for k, v in found_subdomains.items()}
+            await check_subdomain_takeover(takeover_subdomains, args.timeout, args.concurrency)
         
         if args.output:
             print(f"💾 Saving results to {args.output}...")
@@ -213,7 +214,8 @@ async def main():
     print(gradient_text(f"\n✨ Fuzzing completed in {end - start:.2f} seconds."))
     
     if args.takeover and fuzzer.found_subdomains:
-        await check_subdomain_takeover(fuzzer.found_subdomains, args.timeout, args.concurrency)
+        takeover_subdomains = {k: (v[0], v[1]) for k, v in fuzzer.found_subdomains.items()}
+        await check_subdomain_takeover(takeover_subdomains, args.timeout, args.concurrency)
     
     if args.output and fuzzer.found_subdomains:
         print(f"💾 Saving results to {args.output}...")

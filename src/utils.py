@@ -16,15 +16,18 @@ def load_wordlist(filepath: str) -> List[str]:
 
 def save_results(
     output_file: str,
-    found_subdomains: Dict[str, Tuple[Optional[str], Optional[int]]]
+    found_subdomains: Dict[str, Tuple[Optional[str], Optional[int], Optional[str]]]
 ) -> None:
     try:
         with open(output_file, 'w') as f:
-            for subdomain, (proto, status) in sorted(found_subdomains.items()):
+            for subdomain, (proto, status, ip) in sorted(found_subdomains.items()):
                 if proto:
                     f.write(f"{subdomain} [{proto}] [{status}]\n")
                 else:
-                    f.write(f"{subdomain} [DNS]\n")
+                    if ip:
+                        f.write(f"{subdomain} [DNS] [{ip}]\n")
+                    else:
+                        f.write(f"{subdomain} [DNS]\n")
     except Exception as e:
         raise IOError(f"Error saving results: {e}")
 

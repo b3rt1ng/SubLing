@@ -3,15 +3,17 @@ import time
 from typing import Dict, Optional, Tuple
 import aiohttp
 
-from .resolver import check_dns, check_http
+from .resolver import check_dns, check_http, get_ip_address
 from .utils import load_wordlist
 from .ui import (
     print_progress_bar,
     gradient_text,
     whole_line,
     colorize_status,
+    colored_text,
     LIGHT_BLUE,
     DARK_BLUE,
+    GREY,
 )
 
 
@@ -33,7 +35,7 @@ class SubdomainFuzzer:
         self.dns_only = dns_only
         self.http_only = http_only
 
-        self.found_subdomains: Dict[str, Tuple[Optional[str], Optional[int]]] = {}
+        self.found_subdomains: Dict[str, Tuple[Optional[str], Optional[int], Optional[str]]] = {}
         self.checked_count = 0
         self.total_words = 0
         self.header_printed = False
@@ -54,7 +56,8 @@ class SubdomainFuzzer:
         self,
         subdomain: str,
         proto: Optional[str],
-        status: Optional[int]
+        status: Optional[int],
+        ip: Optional[str]
     ):
         async with self.print_lock:
             print(f"\r{whole_line()}\r", end="")
@@ -68,11 +71,16 @@ class SubdomainFuzzer:
                 end_color=DARK_BLUE
             )
 
+            base = ""
             if proto:
                 status_colored = colorize_status(status)
-                print(f"  {subdomain_colored} : [{proto}] {status_colored}")
+                base = f"  {subdomain_colored} : [{proto}] {status_colored}"
             else:
-                print(f"  {subdomain_colored} : [DNS]")
+                base = f"  {subdomain_colored} : [DNS]"
+            if ip:
+                ip_colored = colored_text(ip, GREY)
+                base += f" [{ip_colored}]"
+            print(base)
 
     async def process_worker(
         self,
@@ -97,28 +105,31 @@ class SubdomainFuzzer:
                             self.start_time
                         )
 
+                ip = None  # We'll fetch this if applicable
                 try:
                     if self.http_only:
                         result = await check_http(session, subdomain, self.timeout)
                         if result:
                             proto, status = result
-                            self.found_subdomains[subdomain] = (proto, status)
-                            await self.display_found(subdomain, proto, status)
+                            ip = await get_ip_address(subdomain, self.timeout)  # Add: Fetch IP
+                            self.found_subdomains[subdomain] = (proto, status, ip)
+                            await self.display_found(subdomain, proto, status, ip)
                     else:
                         dns_exists = await check_dns(subdomain, self.timeout)
                         if dns_exists:
+                            ip = await get_ip_address(subdomain, self.timeout)  # Fetch IP early
                             if self.dns_only:
-                                self.found_subdomains[subdomain] = (None, None)
-                                await self.display_found(subdomain, None, None)
+                                self.found_subdomains[subdomain] = (None, None, ip)
+                                await self.display_found(subdomain, None, None, ip)
                             else:
                                 result = await check_http(session, subdomain, self.timeout)
                                 if result:
                                     proto, status = result
-                                    self.found_subdomains[subdomain] = (proto, status)
-                                    await self.display_found(subdomain, proto, status)
+                                    self.found_subdomains[subdomain] = (proto, status, ip)
+                                    await self.display_found(subdomain, proto, status, ip)
                                 else:
-                                    self.found_subdomains[subdomain] = (None, None)
-                                    await self.display_found(subdomain, None, None)
+                                    self.found_subdomains[subdomain] = (None, None, ip)
+                                    await self.display_found(subdomain, None, None, ip)
                 except Exception:
                     pass
                 finally:

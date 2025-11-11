@@ -18,7 +18,6 @@ def load_takeover_signatures():
     if not isinstance(signatures, dict):
         raise ValueError("Invalid format in takeover_signatures.json")
     
-    # Optional: Validate required fields
     for service, sig in signatures.items():
         if not all(key in sig for key in ["cname", "response", "fingerprint"]):
             raise ValueError(f"Invalid signature for {service}: missing required fields")

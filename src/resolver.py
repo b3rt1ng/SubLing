@@ -46,7 +46,7 @@ async def check_http(
     session: aiohttp.ClientSession,
     subdomain: str,
     timeout: int = 5
-) -> Optional[Tuple[str, int]]:
+) -> Optional[Tuple[str, int, Optional[int]]]:
     for protocol in ("https", "http"):
         url = f"{protocol}://{subdomain}"
         try:
@@ -56,9 +56,52 @@ async def check_http(
                 ssl=False,
                 allow_redirects=True,
             ) as response:
-                return (protocol, response.status)
+                size = None
+                content_length = response.headers.get('Content-Length')
+                if content_length:
+                    try:
+                        size = int(content_length)
+                    except ValueError:
+                        pass
+                
+                return (protocol, response.status, size)
         except (aiohttp.ClientError, asyncio.TimeoutError):
             continue
         except Exception:
             continue
     return None
+
+
+async def get_content_size(
+    session: aiohttp.ClientSession,
+    subdomain: str,
+    protocol: str,
+    timeout: int = 5
+) -> Optional[int]:
+    url = f"{protocol}://{subdomain}"
+    try:
+        async with session.get(
+            url,
+            timeout=aiohttp.ClientTimeout(total=timeout),
+            ssl=False,
+            allow_redirects=True,
+        ) as response:
+            content_length = response.headers.get('Content-Length')
+            if content_length:
+                try:
+                    return int(content_length)
+                except ValueError:
+                    pass
+            
+            try:
+                content = await asyncio.wait_for(
+                    response.read(),
+                    timeout=min(timeout, 3)
+                )
+                return len(content)
+            except asyncio.TimeoutError:
+                return None
+    except (aiohttp.ClientError, asyncio.TimeoutError):
+        return None
+    except Exception:
+        return None

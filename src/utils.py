@@ -1,6 +1,5 @@
 from typing import List, Dict, Optional, Tuple
 
-
 def load_wordlist(filepath: str) -> List[str]:
     try:
         with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
@@ -16,11 +15,11 @@ def load_wordlist(filepath: str) -> List[str]:
 
 def save_results(
     output_file: str,
-    found_subdomains: Dict[str, Tuple[Optional[str], Optional[int], Optional[str]]]
+    found_subdomains: Dict[str, Tuple[Optional[str], Optional[int], Optional[str], Optional[int]]]
 ) -> None:
     try:
         with open(output_file, 'w') as f:
-            for subdomain, (proto, status, ip) in sorted(found_subdomains.items()):
+            for subdomain, (proto, status, ip, size) in sorted(found_subdomains.items()):
                 base = ""
                 if proto:
                     base = f"{subdomain} [{proto}] [{status}]"
@@ -28,6 +27,14 @@ def save_results(
                     base = f"{subdomain} [DNS]"
                 if ip:
                     base += f" [{ip}]"
+                if size is not None:
+                    if size < 1024:
+                        size_str = f"{size} bytes"
+                    elif size < 1024 * 1024:
+                        size_str = f"{size / 1024:.1f} KB"
+                    else:
+                        size_str = f"{size / (1024 * 1024):.1f} MB"
+                    base += f" [{size_str}]"
                 f.write(f"{base}\n")
     except Exception as e:
         raise IOError(f"Error saving results: {e}")

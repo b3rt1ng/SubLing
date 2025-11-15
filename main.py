@@ -36,7 +36,7 @@ def normalize_target(raw: str) -> str:
         hostname = parsed.hostname or raw
 
     if not hostname:
-        raise ValueError(f"Impossible d'extraire le host depuis: {raw}")
+        raise ValueError(f"Unable to extract hostname from: {raw}")
 
     hostname = hostname.rstrip(".")
 
@@ -180,7 +180,7 @@ async def main():
         
         found_subdomains = {}
         for subdomain in sorted(zone_transfer_subdomains):
-            found_subdomains[subdomain] = (None, None, None)
+            found_subdomains[subdomain] = (None, None, None, None)
         
         if args.takeover:
             takeover_subdomains = {k: (v[0], v[1]) for k, v in found_subdomains.items()}

@@ -58,6 +58,18 @@ def colorize_status(status):
     else:
         return f"[{status}]"
 
+def format_bytes(bytes_count):
+    """
+    Formate un nombre d'octets en une chaîne lisible (bytes, KB, MB, etc.)
+    """
+    if bytes_count < 1024:
+        return f"{bytes_count} bytes"
+    elif bytes_count < 1024 * 1024:
+        return f"{bytes_count / 1024:.1f} KB"
+    elif bytes_count < 1024 * 1024 * 1024:
+        return f"{bytes_count / (1024 * 1024):.1f} MB"
+    else:
+        return f"{bytes_count / (1024 * 1024 * 1024):.1f} GB"
 
 def format_time(seconds):
     if seconds < 60:
